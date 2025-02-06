@@ -1,0 +1,26 @@
+# Music Downloader
+
+A Python script to search for songs on YouTube and download them as MP3.
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/music_downloader.git
+   cd music_downloader
+
+2. Install dependencies
+``` 
+pip install -r requirements.txt
+```
+
+3. Ensure ffmpeg is installed on your system
+
+## Usage
+
+1. Add song names (one per line) to musicas.txt.
+2. Run the script
+```
+python main.py
+```
+Downloaded files will be saved in the musicas/ folder.
