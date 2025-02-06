@@ -1,10 +1,16 @@
 import os
 import yt_dlp
+import re
 
 
 def ensure_music_folder():
     """Ensure the 'musicas' directory exists."""
     os.makedirs("musicas", exist_ok=True)
+
+
+def is_youtube_playlist(url):
+    """Check if the provided URL is a YouTube playlist."""
+    return bool(re.search(r'https?://(?:www\.)?.*\.youtube\.com.*list=', url))
 
 
 def search_youtube(query):
@@ -41,6 +47,7 @@ def download_audio(url, title):
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
+            'ffmpeg_location': r'C:\ffmpeg\bin\ffmpeg.exe',
             'quiet': True
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -50,8 +57,30 @@ def download_audio(url, title):
         print(f"❌ Error downloading {title}: {e}")
 
 
+def download_playlist(url):
+    """Download all videos from a YouTube playlist as audio."""
+    try:
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'outtmpl': os.path.join("musicas", "%(title)s.%(ext)s"),
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+            'ffmpeg_location': r'C:\ffmpeg\bin\ffmpeg.exe',
+            'quiet': True,
+            'ignoreerrors': True,  # Ignore errors for unavailable videos
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        print("✅ Playlist download completed.")
+    except Exception as e:
+        print(f"❌ Error downloading playlist: {e}")
+
+
 def process_music_list(file_path):
-    """Read the music list from a file and download each song."""
+    """Read the music list from a file and download each song or playlist."""
     if not os.path.exists(file_path):
         print("❌ Error: music list file not found.")
         return
@@ -66,9 +95,20 @@ def process_music_list(file_path):
         return
 
     for song in songs:
-        print(f"🔍 Searching for: {song}")
-        url = search_youtube(song)
-        if url:
-            download_audio(url, song)
+        if song.startswith("http") and is_youtube_playlist(song):
+            print(f"🎵 Downloading playlist: {song}")
+            download_playlist(song)
         else:
-            print(f"⚠️ No results found for: {song}")
+            print(f"🔍 Searching for: {song}")
+            url = search_youtube(song)
+            if url:
+                download_audio(url, song)
+            else:
+                print(f"⚠️ No results found for: {song}")
+
+
+# Example usage
+if __name__ == "__main__":
+    print("Starting music download process...")
+    process_music_list("musicas.txt")  # Replace with your file path
+    print("All downloads completed.")
